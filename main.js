@@ -36,17 +36,16 @@ function effect(e, set, type){
     e.css('border-width', set? '4px': '');
 }
 
-$("body" ).prepend( "<button style='width: 100%;height: 60px;color: red;background-color: black;font-size: x-large;' id='generateBtn'> Generate </button>" );
+$("body" ).prepend("<button style='width: 100%; height: 60px; color: red; background-color: black; font-size: x-large;' id='generateBtn'> Generate </button>" );
 
 $('input').click(inputFn);
-
-$(':button').contextmenu(buttonFn);
-$('a').contextmenu(buttonFn);
+$(':button, :submit, a').contextmenu(buttonFn);
 
 $('#generateBtn').click(() => {
 
-    var title = $(document).find("title").text();
-    var arrayStr = array.map(e => `\t@FindBy(how = ID , using = "${(e[0].id).cleanup()}")\n\tpublic WebElement ${(e[0].id).cleanup()};\n`).join('\n\n');
+    var title = (window.location.pathname.split('/').pop() || window.location.hash.split('/').pop()).replace(/\W+/g, "");
+    var arrayStr = array.map(e => `\t@FindBy(how = ID , using = "${(e[0].id)}")\n\tpublic WebElement ${(e[0].id)};\n`).join('\n\n');
+    var submit = button ? `\n\t@FindBy(how = ID , using = "${(button[0].id)}")\n\tpublic WebElement submit;\n` : ''
 
     var template= `
 // ---- start of the generated file
@@ -66,16 +65,17 @@ public class ${title} extends PageObject{
 	private WebDriver driver;
 	 
 ${arrayStr}
-	
-	@FindBy(how = ID , using = "${(button[0].id).cleanup()}")
-	public WebElement submit;
-	
-	
+    ${submit}
 	public ${title}(WebDriver driver){
 		this.driver=driver;
-	 }
+	}
+
+    public void fill(){
+		// mobileNumber.sendKeys("966536961082");
+        // TODO
+    }
 	 
-	public void fill(){
+	public void fillAndSubmit(){
 		// mobileNumber.sendKeys("966536961082");
         // TODO
 
@@ -87,8 +87,3 @@ ${arrayStr}
     console.log(template);
     alert('Open the chrome console to see the generated java code')
 });
-
-
-String.prototype.cleanup = function() {
-   return this.toLowerCase().replace(/[^a-zA-Z]+/g, "");
-}
